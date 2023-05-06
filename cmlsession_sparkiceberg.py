@@ -1,3 +1,4 @@
+
 # Import PySpark
 import pyspark
 from pyspark.sql import SparkSession
@@ -15,5 +16,14 @@ schema = StructType([
   StructField("store_and_fwd_flag", StringType(), True)
 ])
 
-df = spark.createDataFrame([], schema)
-df.writeTo("marcsparkiceberg").create()
+dftaxi = spark.createDataFrame([], schema)
+dftaxi.writeTo("marcsparkiceberg").create()
+
+dftaxiproperties = spark.sql("show tblproperties default.marcsparkiceberg")
+dftaxiproperties.show(35)
+
+
+
+
+dfweblogs= spark.sql("select * from iceberg_weblogs")
+dfweblogs.show(35)
