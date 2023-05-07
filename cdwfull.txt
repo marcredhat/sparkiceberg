@@ -1,0 +1,91 @@
+DROP TABLE  iceberg_weblogs2;
+
+
+CREATE TABLE iceberg_weblogs (
+`time` timestamp,
+app string,
+request string,
+response_code int)
+PARTITIONED BY SPEC(day(`time`))
+STORED BY ICEBERG
+TBLPROPERTIES('transactional'='false','format-version'='2')
+
+
+CREATE TABLE iceberg_weblogs3 (
+`time` timestamp,
+app string,
+request string,
+response_code int)
+PARTITIONED BY SPEC(day(`time`))
+STORED BY ICEBERG
+TBLPROPERTIES('transactional'='false','format-version'='2')
+
+
+DROP TABLE iceberg_weblogs2
+
+CREATE TABLE iceberg_weblogs2 (
+`time` string,
+app string,
+request string,
+response_code int)
+STORED BY ICEBERG
+TBLPROPERTIES('transactional'='false','format-version'='2')
+
+
+select * from iceberg_weblogs2
+
+DROP TABLE ctas 
+
+create table ctas 
+STORED BY ICEBERG
+TBLPROPERTIES('transactional'='false','format-version'='2')
+as select * from iceberg_weblogs2
+
+select to_date(`time`) from ctas
+
+
+INSERT OVERWRITE iceberg_weblogs3
+SELECT
+to_date(`time`),
+app,
+request,
+response_code
+FROM ctas;
+
+select * from iceberg_weblogs3
+
+ALTER TABLE ctas
+SET PARTITION SPEC(day(`time`), app);
+
+
+select * from iceberg_weblogs2
+
+CREATE TABLE prod.my_app.logs (
+    uuid string NOT NULL,
+    level string NOT NULL,
+    ts timestamp NOT NULL,
+    message string)
+PARTITIONED BY (level, hours(ts))
+STORED BY iceberg
+
+
+select * from iceberg_weblogs 
+
+SHOW TBLPROPERTIES iceberg_weblogs
+
+
+INSERT INTO iceberg_weblogs VALUES('2023-01-17 18:35:49', 'metastore', 'GET /metastore/table/default/sample_07 HTTP/1.1', 200);
+INSERT INTO iceberg_weblogs VALUES('2023-01-17 18:50:12', 'search', 'GET /search/?collection=10000001 HTTP/1.1', 200);
+INSERT INTO iceberg_weblogs VALUES('2023-01-17 19:10:30', 'metastore', 'GET /metastore/table/default/sample_07 HTTP/1.1', 200);
+
+ALTER TABLE iceberg_weblogs
+SET PARTITION SPEC(day(`time`), app);
+
+INSERT INTO iceberg_weblogs VALUES('2023-01-18 18:35:49', 'metastore', 'GET /metastore/table/default/sample_07 HTTP/1.1', 200);
+INSERT INTO iceberg_weblogs VALUES('2023-01-18 18:50:12', 'search', 'GET /search/?collection=10000001 HTTP/1.1', 200);
+INSERT INTO iceberg_weblogs VALUES('2023-01-18 19:10:30', 'metastore', 'GET /metastore/table/default/sample_07 HTTP/1.1', 200);
+
+SELECT * FROM default.iceberg_weblogs.snapshots
+
+SELECT * FROM iceberg_weblogs FOR SYSTEM_TIME AS OF '2023-05-06 00:34:30'
+#WHERE `time` between '2023-01-15 19:00:00' and '2023-01-19 19:15:00' and app='search';
