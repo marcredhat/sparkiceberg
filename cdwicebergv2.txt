@@ -1,0 +1,44 @@
+DROP TABLE  iceberg_weblogs2;
+
+
+CREATE TABLE iceberg_weblogs2 (
+`time` string,
+app string,
+request string,
+response_code int)
+STORED BY ICEBERG
+TBLPROPERTIES('transactional'='false','format-version'='2')
+
+
+DROP TABLE ctas;
+
+create table ctas 
+STORED BY ICEBERG
+TBLPROPERTIES('transactional'='false','format-version'='2')
+as select * from iceberg_weblogs2
+
+DROP TABLE iceberg_weblogs3;
+
+CREATE TABLE iceberg_weblogs3 (
+`time` timestamp,
+app string,
+request string,
+response_code int)
+PARTITIONED BY SPEC(day(`time`))
+STORED BY ICEBERG
+TBLPROPERTIES('transactional'='false','format-version'='2')
+
+INSERT OVERWRITE iceberg_weblogs3
+SELECT
+to_date(`time`),
+app,
+request,
+response_code
+FROM ctas;
+
+select * from iceberg_weblogs3
+
+ALTER TABLE iceberg_weblogs3
+SET PARTITION SPEC(day(`time`), app);
+
+
